@@ -1,0 +1,30 @@
+# Core dependencies
+pandas>=1.5.0
+openpyxl>=3.0.10
+numpy>=1.23.0
+pydantic>=2.0.0
+tqdm>=4.65.0
+networkx>=3.1.0
+
+# LLM integration
+openai>=1.0.0
+sentence-transformers>=2.2.2
+
+# Formal verification and advanced testing
+z3-solver>=4.12.1
+sympy>=1.12.0
+
+# Workflow orchestration
+langgraph>=0.0.15
+
+# API and web interface
+flask>=2.2.0
+flask-cors>=3.0.10
+python-dotenv>=1.0.0
+
+# Testing
+pytest>=7.0.0
+pytest-mock>=3.10.0
+
+# Utilities
+python-dotenv>=1.0.0

@@ -1,0 +1,37 @@
+[
+  {
+    "id": "AE_F_002_2024R1U0",
+    "condition": "If Adverse Event start time is not null, and Study Treatment Administration end time is null, then the difference between Adverse Event date and Overall Max Study Treatment Date per subject is less than or equal to 140 days.",
+    "forms": ["AdverseEvent", "StudyTreatmentAdministration"],
+    "fields": ["StartTime", "EndTime", "Date", "OverallMaxStudyTreatmentDatePerSubject"],
+    "severity": "Critical"
+  },
+  {
+    "id": "AE_F_005_2024R1U0",
+    "condition": "Start date contains an unknown day. This check is to be removed if Start time is not present in the eCRF",
+    "forms": ["AdverseEvent"],
+    "fields": ["StartDate", "StartTime"],
+    "severity": "Major"
+  },
+  {
+    "id": "AE_F_008_2024R1U0",
+    "condition": "End of Study form question 'Primary reason for ending study' is present, however 'Start Date and time' is GREATER than the 'Overall max date of visit On Event (Date of Visit) or max 'Contact date' on the Subject Contact form, whichever is greater.",
+    "forms": ["EndOfStudy", "AdverseEvent", "Visit", "SubjectContact"],
+    "fields": ["PrimaryReasonForEndingStudy", "StartDateTime", "DateOfVisit", "ContactDate"],
+    "severity": "Critical"
+  },
+  {
+    "id": "VS_F_001_2024R1U0",
+    "condition": "Systolic blood pressure is less than diastolic blood pressure.",
+    "forms": ["VitalSigns"],
+    "fields": ["SystolicBP", "DiastolicBP"],
+    "severity": "Critical"
+  },
+  {
+    "id": "DM_F_003_2024R1U0",
+    "condition": "If gender is 'Female' and age is less than 50, then pregnancy test result must not be null.",
+    "forms": ["Demographics", "PregnancyTest"],
+    "fields": ["Gender", "Age", "Result"],
+    "severity": "Major"
+  }
+]

@@ -1,0 +1,145 @@
+{
+  "forms": {
+    "AdverseEvent": {
+      "name": "AdverseEvent",
+      "label": "Adverse Event Form",
+      "fields": [
+        {
+          "name": "StartTime",
+          "label": "Start Time",
+          "type": "TIME",
+          "required": false
+        },
+        {
+          "name": "StartDate",
+          "label": "Start Date",
+          "type": "DATE",
+          "required": true
+        },
+        {
+          "name": "StartDateTime",
+          "label": "Start Date and Time",
+          "type": "DATETIME",
+          "required": false
+        },
+        {
+          "name": "Date",
+          "label": "Adverse Event Date",
+          "type": "DATE",
+          "required": true
+        }
+      ]
+    },
+    "StudyTreatmentAdministration": {
+      "name": "StudyTreatmentAdministration",
+      "label": "Study Treatment Administration Form",
+      "fields": [
+        {
+          "name": "EndTime",
+          "label": "End Time",
+          "type": "TIME",
+          "required": false
+        },
+        {
+          "name": "OverallMaxStudyTreatmentDatePerSubject",
+          "label": "Overall Max Study Treatment Date Per Subject",
+          "type": "DATE",
+          "required": false
+        }
+      ]
+    },
+    "EndOfStudy": {
+      "name": "EndOfStudy",
+      "label": "End of Study Form",
+      "fields": [
+        {
+          "name": "PrimaryReasonForEndingStudy",
+          "label": "Primary Reason for Ending Study",
+          "type": "CATEGORICAL",
+          "required": false,
+          "valid_values": ["Completed", "Adverse Event", "Lost to Follow-up", "Withdrawal of Consent", "Protocol Deviation", "Other"]
+        }
+      ]
+    },
+    "Visit": {
+      "name": "Visit",
+      "label": "Visit Form",
+      "fields": [
+        {
+          "name": "DateOfVisit",
+          "label": "Date of Visit",
+          "type": "DATE",
+          "required": true
+        }
+      ]
+    },
+    "SubjectContact": {
+      "name": "SubjectContact",
+      "label": "Subject Contact Form",
+      "fields": [
+        {
+          "name": "ContactDate",
+          "label": "Contact Date",
+          "type": "DATE",
+          "required": true
+        }
+      ]
+    },
+    "VitalSigns": {
+      "name": "VitalSigns",
+      "label": "Vital Signs Form",
+      "fields": [
+        {
+          "name": "SystolicBP",
+          "label": "Systolic Blood Pressure",
+          "type": "NUMERIC",
+          "required": true,
+          "min_value": 60,
+          "max_value": 250
+        },
+        {
+          "name": "DiastolicBP",
+          "label": "Diastolic Blood Pressure",
+          "type": "NUMERIC",
+          "required": true,
+          "min_value": 30,
+          "max_value": 150
+        }
+      ]
+    },
+    "Demographics": {
+      "name": "Demographics",
+      "label": "Demographics Form",
+      "fields": [
+        {
+          "name": "Gender",
+          "label": "Gender",
+          "type": "CATEGORICAL",
+          "required": true,
+          "valid_values": ["Male", "Female", "Other"]
+        },
+        {
+          "name": "Age",
+          "label": "Age",
+          "type": "NUMERIC",
+          "required": true,
+          "min_value": 18,
+          "max_value": 99
+        }
+      ]
+    },
+    "PregnancyTest": {
+      "name": "PregnancyTest",
+      "label": "Pregnancy Test Form",
+      "fields": [
+        {
+          "name": "Result",
+          "label": "Pregnancy Test Result",
+          "type": "CATEGORICAL",
+          "required": false,
+          "valid_values": ["Positive", "Negative", "Indeterminate"]
+        }
+      ]
+    }
+  }
+}
