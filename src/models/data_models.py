@@ -274,6 +274,7 @@ class TestCase:
     expected_result: bool
     test_data: Dict[str, Any]
     is_positive: bool = True
+    technique: str = "unknown"
     
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'TestCase':
@@ -283,5 +284,6 @@ class TestCase:
             description=data.get('description', ''),
             expected_result=data.get('expected_result', True),
             test_data=data.get('test_data', {}),
-            is_positive=data.get('is_positive', True)
+            is_positive=data.get('is_positive', True),
+            technique=data.get('technique', 'unknown')
         )
