@@ -2,7 +2,7 @@
 Custom parser for the specific Excel file format provided.
 
 This module parses the 'Edit checks' sheet from the Excel files
-to extract rules and specifications.
+to extract rules and specifications, including dynamics and derivatives.
 """
 
 import pandas as pd
@@ -12,6 +12,7 @@ from datetime import datetime
 
 from ..models.data_models import EditCheckRule, StudySpecification, Form, Field, FieldType, RuleSeverity
 from ..utils.logger import Logger
+from ..utils.dynamics import DynamicsProcessor
 
 logger = Logger(__name__)
 
@@ -21,6 +22,7 @@ class CustomParser:
     def __init__(self):
         """Initialize the parser."""
         self.errors = []
+        self.dynamics_processor = DynamicsProcessor()
     
     def parse_rules(self, file_path: str) -> Tuple[List[EditCheckRule], List[Dict[str, Any]]]:
         """
@@ -34,6 +36,9 @@ class CustomParser:
         """
         self.errors = []
         rules = []
+        
+        # Track dynamics and derivatives for later processing
+        self.dynamics = []
         
         try:
             # Read the 'Edit checks' sheet with no header
@@ -109,6 +114,13 @@ class CustomParser:
                     # Store description in a custom attribute if needed
                     setattr(rule, 'description', description)
                     
+                    # Extract dynamics and derivatives from the condition
+                    rule_dynamics = self.dynamics_processor.extract_dynamics(condition)
+                    if rule_dynamics:
+                        self.dynamics.extend(rule_dynamics)
+                        # Store dynamics in a custom attribute
+                        setattr(rule, 'dynamics', rule_dynamics)
+                    
                     # Extract form and field references
                     form_name = str(row[col_map.get('form', 2)]) if pd.notna(row[col_map.get('form', 2)]) else ""
                     field_name = str(row[col_map.get('field', 3)]) if pd.notna(row[col_map.get('field', 3)]) else ""
@@ -143,6 +155,7 @@ class CustomParser:
                     })
             
             logger.info(f"Parsed {len(rules)} rules with {len(self.errors)} errors")
+            logger.info(f"Extracted {len(self.dynamics)} dynamic functions from rules")
             
         except Exception as e:
             self.errors.append({
@@ -196,6 +209,10 @@ class CustomParser:
             
             # Create additional forms for common EDC structures
             self._add_common_edc_forms(spec)
+            
+            # Add dynamics and derivatives form if we have extracted dynamics
+            if hasattr(self, 'dynamics') and self.dynamics:
+                self._add_dynamics_form(spec)
             
         except Exception as e:
             self.errors.append({
@@ -345,3 +362,42 @@ class CustomParser:
                   valid_values=["Scheduled", "Completed", "Missed", "Early Termination"])
         ])
         spec.add_form(visit)
+        
+    def _add_dynamics_form(self, spec: StudySpecification) -> None:
+        """
+        Add dynamics and derivatives form to the specification.
+        
+        Args:
+            spec: The specification to augment
+        """
+        # Create Derivatives form
+        derivatives = Form(
+            name="Derivatives",
+            label="Derived Variables and Dynamics"
+        )
+        
+        # Add standard derived fields
+        derivatives.fields.extend([
+            Field(name="BMI", type=FieldType.NUMBER, label="Body Mass Index"),
+            Field(name="BSA", type=FieldType.NUMBER, label="Body Surface Area"),
+            Field(name="eGFR", type=FieldType.NUMBER, label="Estimated Glomerular Filtration Rate")
+        ])
+        
+        # Add fields for each dynamic function found in rules
+        for dynamic in self.dynamics:
+            field_name = dynamic['original'].replace('(', '_').replace(')', '').replace(',', '_').replace(' ', '')
+            
+            # Check if field already exists
+            if not any(field.name == field_name for field in derivatives.fields):
+                field_type = self.dynamics_processor._infer_dynamic_type(dynamic['function'])
+                
+                field = Field(
+                    name=field_name,
+                    type=field_type,
+                    label=dynamic['original'],
+                    required=False
+                )
+                
+                derivatives.fields.append(field)
+        
+        spec.add_form(derivatives)

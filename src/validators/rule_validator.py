@@ -3,6 +3,7 @@ Rule validator for the Edit Check Rule Validation System.
 
 This module provides functionality to validate edit check rules against
 study specifications, ensuring logical consistency and completeness.
+Includes validation of dynamics and derivatives.
 """
 
 import re
@@ -10,6 +11,7 @@ from typing import List, Dict, Any, Optional, Set, Tuple
 
 from ..models.data_models import EditCheckRule, StudySpecification, ValidationResult
 from ..utils.logger import Logger
+from .dynamics_validator import DynamicsValidator
 
 logger = Logger(__name__)
 
@@ -26,6 +28,9 @@ class RuleValidator:
             re.compile(r'IF\s+(.+?)\s+THEN\s+(.+?)\s+(MUST\s+BE|SHOULD\s+BE|MUST\s+NOT\s+BE|SHOULD\s+NOT\s+BE)\s+(.+)', re.IGNORECASE),
             re.compile(r'WHEN\s+(.+?)\s+THEN\s+(.+?)\s+(MUST\s+BE|SHOULD\s+BE|MUST\s+NOT\s+BE|SHOULD\s+NOT\s+BE)\s+(.+)', re.IGNORECASE)
         ]
+        
+        # Initialize dynamics validator
+        self.dynamics_validator = DynamicsValidator()
     
     def validate_rules(self, rules: List[EditCheckRule], specification: StudySpecification) -> List[ValidationResult]:
         """
@@ -111,6 +116,17 @@ class RuleValidator:
         semantic_errors = self._validate_rule_semantics(rule.condition, specification)
         for error_type, message, details in semantic_errors:
             result.add_error(error_type, message, details)
+            
+        # Validate dynamics and derivatives
+        dynamics_result = self.dynamics_validator.validate_rule_dynamics(rule, specification)
+        if not dynamics_result.is_valid:
+            # Add dynamics validation errors to the result
+            for error in dynamics_result.errors:
+                result.add_error(
+                    error.get('error_type', 'dynamics_error'),
+                    error.get('message', 'Invalid dynamics'),
+                    error.get('details', {})
+                )
         
         return result
     
