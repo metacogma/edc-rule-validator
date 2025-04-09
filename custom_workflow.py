@@ -164,7 +164,21 @@ class CustomWorkflow:
                 if not rules:
                     raise Exception(f"Failed to parse rules file: {rule_errors[0]['message']}")
             
-            result["rules"] = [rule.to_dict() for rule in rules]
+            # Convert rules to dictionaries manually
+            rules_dicts = []
+            for rule in rules:
+                rule_dict = {
+                    "id": rule.id,
+                    "condition": rule.condition,
+                    "message": rule.message,
+                    "severity": rule.severity.value if hasattr(rule.severity, 'value') else rule.severity,
+                    "forms": rule.forms,
+                    "fields": rule.fields,
+                    "formalized_condition": rule.formalized_condition
+                }
+                rules_dicts.append(rule_dict)
+                
+            result["rules"] = rules_dicts
             logger.info(f"Successfully parsed {len(rules)} rules")
             
             # Parse specification
@@ -177,7 +191,36 @@ class CustomWorkflow:
                 if not specification:
                     raise Exception(f"Failed to parse specification file: {spec_errors[0]['message']}")
             
-            result["specification"] = specification.to_dict() if specification else None
+            # Convert specification to dictionary manually
+            if specification:
+                spec_dict = {
+                    "forms": {}
+                }
+                for form_name, form in specification.forms.items():
+                    form_dict = {
+                        "name": form.name,
+                        "label": form.label,
+                        "fields": []
+                    }
+                    
+                    for field in form.fields:
+                        field_dict = {
+                            "name": field.name,
+                            "type": field.type.value if hasattr(field.type, 'value') else field.type,
+                            "label": field.label,
+                            "required": field.required,
+                            "valid_values": field.valid_values,
+                            "min_value": field.min_value,
+                            "max_value": field.max_value
+                        }
+                        form_dict["fields"].append(field_dict)
+                    
+                    spec_dict["forms"][form_name] = form_dict
+                
+                result["specification"] = spec_dict
+            else:
+                result["specification"] = None
+                
             logger.info(f"Successfully parsed specification with {len(specification.forms) if specification else 0} forms")
             
             # Store the objects for later use
@@ -203,7 +246,20 @@ class CustomWorkflow:
             
             logger.info(f"Validating {len(rules)} rules against specification")
             validation_results = self.validator.validate_rules(rules, specification)
-            result["validation_results"] = [vr.to_dict() for vr in validation_results]
+            
+            # Convert validation results to dictionaries manually
+            validation_results_dicts = []
+            for vr in validation_results:
+                vr_dict = {
+                    "rule_id": vr.rule_id,
+                    "is_valid": vr.is_valid,
+                    "errors": vr.errors,
+                    "warnings": vr.warnings
+                }
+                validation_results_dicts.append(vr_dict)
+                
+            result["validation_results"] = validation_results_dicts
+            result["_validation_results_objects"] = validation_results
             
             # Check if all rules are valid
             all_valid = all(vr.is_valid for vr in validation_results)
@@ -227,6 +283,7 @@ class CustomWorkflow:
         """Formalize the rules using LLM."""
         try:
             rules = result["_rules_objects"]
+            specification = result["_specification_object"]
             
             if not self.llm_orchestrator.is_available:
                 logger.warning("LLM is not available. Skipping rule formalization.")
@@ -235,16 +292,36 @@ class CustomWorkflow:
             logger.info(f"Formalizing {len(rules)} rules using LLM")
             
             # Formalize each rule
+            formalized_rules = []
             for i, rule in enumerate(rules):
                 logger.info(f"Formalizing rule {rule.id} ({i+1}/{len(rules)})")
-                formalized_rule = self.llm_orchestrator.formalize_rule(rule)
-                
-                # Update the rule in the list
-                rules[i] = formalized_rule
+                try:
+                    formalized_rule = self.llm_orchestrator.formalize_rule(rule, specification)
+                    formalized_rules.append(formalized_rule)
+                except Exception as e:
+                    logger.error(f"Error formalizing rule {rule.id}: {str(e)}")
+                    # Keep the original rule if formalization fails
+                    formalized_rules.append(rule)
             
-            # Update the result with formalized rules
-            result["_rules_objects"] = rules
-            result["rules"] = [rule.to_dict() for rule in rules]
+            # Only update if we have formalized rules
+            if formalized_rules:
+                result["_rules_objects"] = formalized_rules
+            
+            # Convert formalized rules to dictionaries manually
+            formalized_rules_dicts = []
+            for rule in result["_rules_objects"]:
+                rule_dict = {
+                    "id": rule.id,
+                    "condition": rule.condition,
+                    "message": rule.message,
+                    "severity": rule.severity.value if hasattr(rule.severity, 'value') else rule.severity,
+                    "forms": rule.forms,
+                    "fields": rule.fields,
+                    "formalized_condition": rule.formalized_condition
+                }
+                formalized_rules_dicts.append(rule_dict)
+                
+            result["rules"] = formalized_rules_dicts
             
             return result
         except Exception as e:
@@ -268,21 +345,42 @@ class CustomWorkflow:
             # Verify each rule
             verified_rules = []
             for i, rule in enumerate(rules):
-                logger.info(f"Verifying rule {rule.id} ({i+1}/{len(rules)})")
-                
-                # Skip rules without formalized condition
-                if not rule.formalized_condition:
-                    logger.warning(f"Rule {rule.id} has no formalized condition. Skipping verification.")
+                try:
+                    logger.info(f"Verifying rule {rule.id} ({i+1}/{len(rules)})")
+                    
+                    # Skip rules without formalized condition
+                    if not rule.formalized_condition:
+                        logger.warning(f"Rule {rule.id} has no formalized condition. Skipping verification.")
+                        verified_rules.append(rule)
+                        continue
+                    
+                    # Verify the rule
+                    verified_rule = self.verifier.verify_rule(rule, specification)
+                    verified_rules.append(verified_rule)
+                except Exception as e:
+                    logger.error(f"Error verifying rule {rule.id}: {str(e)}")
+                    # Keep the original rule if verification fails
                     verified_rules.append(rule)
-                    continue
-                
-                # Verify the rule
-                verified_rule = self.verifier.verify_rule(rule, specification)
-                verified_rules.append(verified_rule)
             
-            # Update the result with verified rules
-            result["_rules_objects"] = verified_rules
-            result["rules"] = [rule.to_dict() for rule in verified_rules]
+            # Only update if we have verified rules
+            if verified_rules:
+                result["_rules_objects"] = verified_rules
+                
+                # Convert verified rules to dictionaries manually
+                verified_rules_dicts = []
+                for rule in verified_rules:
+                    rule_dict = {
+                        "id": rule.id,
+                        "condition": rule.condition,
+                        "message": rule.message,
+                        "severity": rule.severity.value if hasattr(rule.severity, 'value') else rule.severity,
+                        "forms": rule.forms,
+                        "fields": rule.fields,
+                        "formalized_condition": rule.formalized_condition
+                    }
+                    verified_rules_dicts.append(rule_dict)
+                    
+                result["rules"] = verified_rules_dicts
             
             return result
         except Exception as e:
@@ -302,7 +400,7 @@ class CustomWorkflow:
             specification = result["_specification_object"]
             
             # Filter rules that are valid for test generation
-            valid_rules = [rule for rule in rules if rule.formalized_condition]
+            valid_rules = [rule for rule in rules if hasattr(rule, 'formalized_condition') and rule.formalized_condition]
             
             if not valid_rules:
                 logger.warning("No valid rules for test generation")
@@ -313,42 +411,64 @@ class CustomWorkflow:
             # Generate test cases using advanced techniques
             all_test_cases = []
             for i, rule in enumerate(valid_rules):
-                logger.info(f"Generating test cases for rule {rule.id} ({i+1}/{len(valid_rules)})")
-                
-                # Generate test cases
-                test_cases = self.test_generator.generate_tests(
-                    rule, 
-                    specification,
-                    self.config["test_techniques"],
-                    self.config["test_cases_per_rule"]
-                )
-                
-                all_test_cases.extend(test_cases)
-                logger.info(f"Generated {len(test_cases)} test cases for rule {rule.id}")
-            
-            # If no test cases were generated, try LLM-based generation
-            if not all_test_cases and self.llm_orchestrator.is_available:
-                logger.warning("Advanced test generation produced no tests. Falling back to LLM-based generation.")
-                for i, rule in enumerate(valid_rules):
-                    logger.info(f"Generating LLM test cases for rule {rule.id} ({i+1}/{len(valid_rules)})")
+                try:
+                    logger.info(f"Generating test cases for rule {rule.id} ({i+1}/{len(valid_rules)})")
                     
                     # Generate test cases
-                    test_cases = self.llm_orchestrator.generate_test_cases(
+                    test_cases = self.test_generator.generate_tests(
                         rule, 
                         specification,
+                        self.config["test_techniques"],
                         self.config["test_cases_per_rule"]
                     )
                     
-                    # Add a marker to indicate these are LLM-generated tests
-                    for test in test_cases:
-                        test.description = f"[LLM] {test.description}"
-                    
                     all_test_cases.extend(test_cases)
-                    logger.info(f"Generated {len(test_cases)} LLM test cases for rule {rule.id}")
+                    logger.info(f"Generated {len(test_cases)} test cases for rule {rule.id}")
+                except Exception as e:
+                    logger.error(f"Error generating test cases for rule {rule.id}: {str(e)}")
+            
+            # If no test cases were generated, try LLM-based generation
+            if not all_test_cases and self.llm_orchestrator.is_available:
+                try:
+                    logger.warning("Advanced test generation produced no tests. Falling back to LLM-based generation.")
+                    for i, rule in enumerate(valid_rules):
+                        try:
+                            logger.info(f"Generating LLM test cases for rule {rule.id} ({i+1}/{len(valid_rules)})")
+                            
+                            # Generate test cases
+                            test_cases = self.llm_orchestrator.generate_test_cases(
+                                rule, 
+                                specification,
+                                self.config["test_cases_per_rule"]
+                            )
+                            
+                            # Add a marker to indicate these are LLM-generated tests
+                            for test in test_cases:
+                                test.description = f"[LLM] {test.description}"
+                            
+                            all_test_cases.extend(test_cases)
+                            logger.info(f"Generated {len(test_cases)} LLM test cases for rule {rule.id}")
+                        except Exception as e:
+                            logger.error(f"Error generating LLM test cases for rule {rule.id}: {str(e)}")
+                except Exception as e:
+                    logger.error(f"Error in LLM fallback test generation: {str(e)}")
             
             # Update the result with test cases
-            result["test_cases"] = [tc.to_dict() for tc in all_test_cases]
-            result["_test_case_objects"] = all_test_cases
+            if all_test_cases:
+                # Convert test cases to dictionaries manually
+                test_cases_dicts = []
+                for tc in all_test_cases:
+                    tc_dict = {
+                        "rule_id": tc.rule_id,
+                        "description": tc.description,
+                        "expected_result": tc.expected_result,
+                        "test_data": tc.test_data,
+                        "is_positive": tc.is_positive
+                    }
+                    test_cases_dicts.append(tc_dict)
+                    
+                result["test_cases"] = test_cases_dicts
+                result["_test_case_objects"] = all_test_cases
             
             return result
         except Exception as e:
