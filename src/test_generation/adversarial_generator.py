@@ -13,7 +13,7 @@ import numpy as np
 from datetime import datetime, timedelta
 
 from ..models.data_models import EditCheckRule, StudySpecification, TestCase, FieldType
-from ..llm.llm_orchestrator import LLMOrchestrator
+from ..llm.enhanced_llm_orchestrator import EnhancedLLMOrchestrator
 from ..utils.logger import Logger
 
 logger = Logger(__name__)
@@ -21,7 +21,7 @@ logger = Logger(__name__)
 class AdversarialTestGenerator:
     """Generate adversarial test cases using counterfactual reasoning."""
     
-    def __init__(self, llm_orchestrator: Optional[LLMOrchestrator] = None):
+    def __init__(self, llm_orchestrator: Optional[EnhancedLLMOrchestrator] = None):
         """
         Initialize the adversarial test generator.
         

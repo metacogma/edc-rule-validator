@@ -14,9 +14,9 @@ from pydantic import BaseModel, Field
 
 from ..models.data_models import EditCheckRule, StudySpecification, ValidationResult, TestCase
 from ..parsers.unified_parser import UnifiedParser
-from ..validators.rule_validator import RuleValidator
-from ..validators.z3_verifier import Z3Verifier
-from ..llm.llm_orchestrator import LLMOrchestrator
+from ..validators.enhanced_rule_validator import EnhancedRuleValidator
+from ..validators.enhanced_z3_verifier import EnhancedZ3Verifier
+from ..llm.enhanced_llm_orchestrator import EnhancedLLMOrchestrator
 from ..test_generation.test_generator import TestGenerator
 from ..utils.logger import Logger
 
@@ -61,9 +61,9 @@ class WorkflowOrchestrator:
             config: Optional configuration dictionary
         """
         self.parser = UnifiedParser()
-        self.validator = RuleValidator()
-        self.verifier = Z3Verifier()
-        self.llm_orchestrator = LLMOrchestrator()
+        self.validator = EnhancedRuleValidator()
+        self.verifier = EnhancedZ3Verifier()
+        self.llm_orchestrator = EnhancedLLMOrchestrator()
         self.test_generator = TestGenerator(self.llm_orchestrator)
         
         # Default configuration

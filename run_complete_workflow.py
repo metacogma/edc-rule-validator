@@ -37,8 +37,9 @@ logging.basicConfig(
 logger = logging.getLogger("EclaireTrials")
 
 # Import the necessary components
-from src.parsers.custom_parser import CustomParser
-from src.validators.rule_validator import RuleValidator
+from src.parsers.json_rule_parser import JSONRuleParser
+from src.parsers.json_specification_parser import JSONSpecificationParser
+from src.validators.enhanced_rule_validator import EnhancedRuleValidator
 from src.validators.dynamics_validator import DynamicsValidator
 from src.utils.dynamics import DynamicsProcessor
 from src.test_generation.custom_test_generator import CustomTestGenerator
@@ -115,8 +116,8 @@ def main():
     print()
     
     # Define file paths
-    rules_file = "data/excel/rules_study.xlsx"
-    spec_file = "data/excel/rules_spec.xlsx"
+    rules_file = "data/rules.json"
+    spec_file = "data/specification.json"
     
     # Check if files exist
     if not os.path.exists(rules_file):
@@ -131,20 +132,20 @@ def main():
     print_info(f"Specification file: {spec_file}")
     print()
     
-    # Step 1: Parse the files using the custom parser with dynamics support
-    print_subheader("STEP 1: PARSING FILES WITH DYNAMICS SUPPORT")
-    parser = CustomParser()
+    # Step 1: Parse the files using the JSON parsers
+    print_subheader("STEP 1: PARSING FILES")
     
     # Parse specification
     print_info("Parsing specification...")
     start_time = time.time()
-    spec, spec_errors = parser.parse_specification(spec_file)
-    parse_spec_time = time.time() - start_time
-    
-    if spec_errors:
-        print_warning(f"Found {len(spec_errors)} errors while parsing specification:")
-        for error in spec_errors:
-            print_warning(f"  - {error}")
+    spec_parser = JSONSpecificationParser()
+    try:
+        spec = spec_parser.parse(spec_file)
+        parse_spec_time = time.time() - start_time
+        print_success(f"Parsed specification with {len(spec.forms)} forms in {parse_spec_time:.2f} seconds")
+    except Exception as e:
+        print_error(f"Error parsing specification: {str(e)}")
+        return 1
     
     print_success(f"Parsed specification with {len(spec.forms)} forms in {parse_spec_time:.2f} seconds")
     print_info("Forms in specification:")
@@ -156,15 +157,14 @@ def main():
     # Parse rules
     print_info("Parsing rules...")
     start_time = time.time()
-    rules, rule_errors = parser.parse_rules(rules_file)
-    parse_rules_time = time.time() - start_time
-    
-    if rule_errors:
-        print_warning(f"Found {len(rule_errors)} errors while parsing rules:")
-        for error in rule_errors:
-            print_warning(f"  - {error}")
-    
-    print_success(f"Parsed {len(rules)} rules in {parse_rules_time:.2f} seconds")
+    rule_parser = JSONRuleParser()
+    try:
+        rules = rule_parser.parse(rules_file)
+        parse_rules_time = time.time() - start_time
+        print_success(f"Parsed {len(rules)} rules in {parse_rules_time:.2f} seconds")
+    except Exception as e:
+        print_error(f"Error parsing rules: {str(e)}")
+        return 1
     print()
     
     # Step 2: Process dynamics and update specification with derivatives
@@ -173,7 +173,13 @@ def main():
     
     # Extract dynamics from rules
     print_info("Extracting dynamics from rules...")
-    dynamics = parser.dynamics if hasattr(parser, 'dynamics') else []
+    dynamics = []
+    for rule in rules:
+        rule_dynamics = dynamics_processor.extract_dynamics(rule.condition)
+        if rule_dynamics:
+            dynamics.extend(rule_dynamics)
+            # Store dynamics in a custom attribute
+            setattr(rule, 'dynamics', rule_dynamics)
     
     if dynamics:
         print_success(f"Found {len(dynamics)} dynamic functions across all rules")
@@ -190,7 +196,7 @@ def main():
     
     # Step 3: Validate rules with dynamics support
     print_subheader("STEP 3: VALIDATING RULES WITH DYNAMICS SUPPORT")
-    validator = RuleValidator()
+    validator = EnhancedRuleValidator()
     dynamics_validator = DynamicsValidator()
     
     # Validate each rule

@@ -10,7 +10,7 @@ import concurrent.futures
 from tqdm import tqdm
 
 from ..models.data_models import EditCheckRule, StudySpecification, TestCase
-from ..llm.llm_orchestrator import LLMOrchestrator
+from ..llm.enhanced_llm_orchestrator import EnhancedLLMOrchestrator
 from ..utils.logger import Logger
 from .metamorphic_tester import MetamorphicTester
 from .symbolic_executor import SymbolicExecutor
@@ -23,7 +23,7 @@ logger = Logger(__name__)
 class TestGenerator:
     """Orchestrate the generation of test cases using multiple advanced techniques."""
     
-    def __init__(self, llm_orchestrator: Optional[LLMOrchestrator] = None):
+    def __init__(self, llm_orchestrator: Optional[EnhancedLLMOrchestrator] = None):
         """
         Initialize the test generator.
         

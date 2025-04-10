@@ -18,7 +18,7 @@ sys.path.append(str(Path(__file__).parent.parent.parent))
 from src.models.data_models import EditCheckRule, StudySpecification
 from src.parsers.unified_parser import UnifiedParser
 from src.test_generation.test_generator import TestGenerator
-from src.llm.llm_orchestrator import LLMOrchestrator
+from src.llm.enhanced_llm_orchestrator import EnhancedLLMOrchestrator
 from src.utils.logger import Logger
 
 logger = Logger(__name__)
@@ -77,7 +77,7 @@ def main():
     logger.info(f"Parsed {len(rules)} rules and specification successfully")
     
     # Initialize the test generator
-    llm_orchestrator = LLMOrchestrator()
+    llm_orchestrator = EnhancedLLMOrchestrator()
     test_generator = TestGenerator(llm_orchestrator)
     
     # Generate test cases

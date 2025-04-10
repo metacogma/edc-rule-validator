@@ -33,5 +33,12 @@
     "forms": ["Demographics", "PregnancyTest"],
     "fields": ["Gender", "Age", "Result"],
     "severity": "Major"
+  },
+  {
+    "id": "VS_F_002_2024R1U0",
+    "condition": "If SystolicBP > 300 AND SystolicBP < 200 AND NonExistentField = 'Value' AND StartDate > 100, then DiastolicBP must be less than 90.",
+    "forms": ["VitalSigns", "AdverseEvent"],
+    "fields": ["SystolicBP", "DiastolicBP", "StartDate"],
+    "severity": "Critical"
   }
 ]

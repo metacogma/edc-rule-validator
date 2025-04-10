@@ -12,7 +12,7 @@ import numpy as np
 from datetime import datetime, timedelta
 
 from ..models.data_models import EditCheckRule, StudySpecification, TestCase, ValidationResult
-from ..validators.z3_verifier import Z3Verifier
+from ..validators.enhanced_z3_verifier import EnhancedZ3Verifier
 from ..utils.logger import Logger
 
 logger = Logger(__name__)
@@ -20,14 +20,14 @@ logger = Logger(__name__)
 class MultiModalVerifier:
     """Verify test cases using multiple complementary approaches."""
     
-    def __init__(self, z3_verifier: Optional[Z3Verifier] = None):
+    def __init__(self, z3_verifier: Optional[EnhancedZ3Verifier] = None):
         """
         Initialize the multi-modal verifier.
         
         Args:
             z3_verifier: Z3 verifier for formal verification
         """
-        self.z3_verifier = z3_verifier or Z3Verifier()
+        self.z3_verifier = z3_verifier or EnhancedZ3Verifier()
         
         # Verification modes
         self.verification_modes = [
