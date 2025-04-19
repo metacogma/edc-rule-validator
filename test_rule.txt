@@ -1,0 +1,1 @@
+rule: demo SMT-LIB rule

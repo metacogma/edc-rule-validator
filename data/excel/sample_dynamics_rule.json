@@ -1,0 +1,44 @@
+{
+  "rules": [
+    {
+      "id": "BMI_CALC_001",
+      "condition": "BMI(Demographics.Weight, Demographics.Height) <= 35",
+      "message": "BMI must not exceed 35",
+      "severity": "error",
+      "forms": ["Demographics"],
+      "fields": ["Weight", "Height"]
+    },
+    {
+      "id": "DAYS_BETWEEN_001",
+      "condition": "DAYS_BETWEEN(Visit.ScreeningDate, Visit.BaselineDate) <= 28",
+      "message": "Days between screening and baseline must not exceed 28 days",
+      "severity": "error",
+      "forms": ["Visit"],
+      "fields": ["ScreeningDate", "BaselineDate"]
+    },
+    {
+      "id": "CHANGE_FROM_BASELINE_001",
+      "condition": "CHANGE_FROM_BASELINE(Labs.Hemoglobin, Labs.BaselineHemoglobin) >= -2",
+      "message": "Hemoglobin decrease from baseline must not exceed 2 g/dL",
+      "severity": "warning",
+      "forms": ["Labs"],
+      "fields": ["Hemoglobin", "BaselineHemoglobin"]
+    },
+    {
+      "id": "RATE_OF_CHANGE_001",
+      "condition": "RATE_OF_CHANGE(Labs.Creatinine, Labs.PreviousCreatinine, Visit.VisitDate, Visit.PreviousVisitDate) <= 0.5",
+      "message": "Rate of increase in creatinine must not exceed 0.5 mg/dL per day",
+      "severity": "warning",
+      "forms": ["Labs", "Visit"],
+      "fields": ["Creatinine", "PreviousCreatinine", "VisitDate", "PreviousVisitDate"]
+    },
+    {
+      "id": "IS_INCREASING_001",
+      "condition": "IS_INCREASING(Labs.Platelets)",
+      "message": "Platelets should show an increasing trend",
+      "severity": "info",
+      "forms": ["Labs"],
+      "fields": ["Platelets"]
+    }
+  ]
+}

@@ -14,17 +14,42 @@ sentence-transformers>=2.2.2
 z3-solver>=4.12.1
 sympy>=1.12.0
 
-# Workflow orchestration
-langgraph>=0.0.15
-
 # API and web interface
-flask>=2.2.0
-flask-cors>=3.0.10
-python-dotenv>=1.0.0
+fastapi>=0.104.0
+uvicorn>=0.23.2
+python-multipart>=0.0.6
+starlette>=0.27.0
+jinja2>=3.1.2
+aiofiles>=23.2.1
+redis>=5.0.1
+celery>=5.3.4
+flower>=2.0.1
+pydantic-settings>=2.0.3
+
+# Monitoring and observability
+promptheus-client>=0.17.1
+pyinstrument>=4.6.0
+ddtrace>=1.19.0
+logging-json>=0.5.0
+sentry-sdk>=1.32.0
+
+# Security
+python-jose>=3.3.0
+passlib>=1.7.4
+bcrypt>=4.0.1
+pyjwt>=2.8.0
 
 # Testing
 pytest>=7.0.0
 pytest-mock>=3.10.0
+pytest-asyncio>=0.21.1
+httpx>=0.25.0
 
 # Utilities
 python-dotenv>=1.0.0
+tenacity>=8.2.3
+humanize>=4.8.0
+pytz>=2023.3
+
+# Optional: LangGraph (can be used for advanced workflows)
+langgraph>=0.0.15
