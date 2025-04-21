@@ -1,0 +1,73 @@
+[
+  {
+    "id": "AE_F_002_2024R1U0",
+    "title": "AE Start Time vs. Max Study Treatment Date (140 days)",
+    "description": "If Adverse Event start time is not null, and Study Treatment Administration end time is null, then the difference between Adverse Event date and Overall Max Study Treatment Date per subject is less than or equal to 140 days.",
+    "edit_check_type": "temporal",
+    "category": ["cross-form", "temporal", "protocol-compliance"],
+    "forms": [
+      {"label": "Adverse Event Form", "name": "AdverseEvent"},
+      {"label": "Study Treatment Administration Form", "name": "StudyTreatmentAdministration"}
+    ],
+    "fields": [
+      {"label": "Start Time", "name": "StartTime", "form": "AdverseEvent"},
+      {"label": "End Time", "name": "EndTime", "form": "StudyTreatmentAdministration"},
+      {"label": "Date", "name": "Date", "form": "AdverseEvent"},
+      {"label": "Overall Max Study Treatment Date Per Subject", "name": "OverallMaxStudyTreatmentDatePerSubject", "form": "StudyTreatmentAdministration"}
+    ],
+    "representations": {
+      "formal_logic": {
+        "expression": "IF AdverseEvent.StartTime IS NOT NULL AND StudyTreatmentAdministration.EndTime IS NULL THEN (AdverseEvent.Date - StudyTreatmentAdministration.OverallMaxStudyTreatmentDatePerSubject) <= 140",
+        "language": "First-order logic"
+      },
+      "symbolic": {
+        "expression": "if AE_StartTime and not STA_EndTime: AE_Date - STA_MaxDate <= 140",
+        "language": "Python-like pseudocode"
+      },
+      "nlp": {
+        "original_text": "If Adverse Event start time is not null, and Study Treatment Administration end time is null, then the difference between Adverse Event date and Overall Max Study Treatment Date per subject is less than or equal to 140 days.",
+        "parsed_template": "IF {AE_StartTime} IS NOT NULL AND {STA_EndTime} IS NULL THEN ({AE_Date} - {STA_MaxDate}) <= 140",
+        "confidence": 0.95
+      },
+      "causal": {
+        "graph_nodes": [
+          "AdverseEvent.StartTime",
+          "StudyTreatmentAdministration.EndTime",
+          "AdverseEvent.Date",
+          "StudyTreatmentAdministration.OverallMaxStudyTreatmentDatePerSubject"
+        ],
+        "causal_edges": [
+          {"from": "StudyTreatmentAdministration.OverallMaxStudyTreatmentDatePerSubject", "to": "AdverseEvent.Date", "type": "temporal_constraint"}
+        ],
+        "causal_inference_notes": "Violation may indicate late AE or data entry error."
+      },
+      "llm_generated": {
+        "model": "GPT-4",
+        "generated_syntax": "IF AdverseEvent.StartTime IS NOT NULL AND StudyTreatmentAdministration.EndTime IS NULL AND (AdverseEvent.Date - StudyTreatmentAdministration.OverallMaxStudyTreatmentDatePerSubject) > 140 THEN FIRE ...",
+        "confidence": 0.93
+      },
+      "human_review": {
+        "reviewer": "jhu_data_manager",
+        "status": "pending",
+        "notes": "Check field presence in eCRF before enabling."
+      }
+    },
+    "vault_rule_syntax_generated": "IF AdverseEvent.StartTime IS NOT NULL AND StudyTreatmentAdministration.EndTime IS NULL AND (AdverseEvent.Date - StudyTreatmentAdministration.OverallMaxStudyTreatmentDatePerSubject) > 140 THEN FIRE 'Start date/time is more than 140 days after the last study treatment end date/time. Please confirm or correct.'",
+    "vault_rule_syntax_extracted": "Start date/time is more than 140 days after the last study treatment end date/time. Please confirm or correct.",
+    "syntax_comparison": "REQUIRES HUMAN REVIEW",
+    "test_case_vector_id": "TCV_002_2024R1U0",
+    "confidence_vector_id": "CONF_002_2024R1U0",
+    "knowledge_graph_links": [
+      {"source": "StudyTreatmentAdministration.OverallMaxStudyTreatmentDatePerSubject", "target": "AdverseEvent.Date", "type": "temporal_dependency"}
+    ],
+    "audit": {
+      "created_by": "protocol_import",
+      "created_at": "2025-04-19T04:54:04-04:00",
+      "last_modified_by": "jhu_data_manager",
+      "last_modified_at": "2025-04-19T04:54:04-04:00",
+      "source_protocol": "rules_study.xlsx",
+      "source_spec": "rules_spec.xlsx",
+      "review_status": "pending"
+    }
+  }
+]

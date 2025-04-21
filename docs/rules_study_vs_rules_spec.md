@@ -1,7 +1,7 @@
 # Relationship Between rules_study.xlsx and rules_spec.xlsx
 
 ## 1. File Structure & Content
-Both files have the same structure and columns (27 columns), including visit days, folders, and various event columns. The first column lists form names (e.g., Enrollment, Informed Consent, Demographics, Vital Signs). The rest of the columns indicate the presence or applicability of each form at different study visits/events.
+
 
 ## 2. Interpretation in Clinical Trials Context
 ### a) rules_study.xlsx
@@ -21,7 +21,7 @@ Both files have the same structure and columns (27 columns), including visit day
 **Workflow:**
 1. Data manager creates/approves study design in rules_study.xlsx.
 2. EDC developer uses rules_spec.xlsx to configure the EDC system.
-3. There should be a 1:1 mapping and traceability between these files.
+
 
 ## 4. Why This Matters
 - **Data Managers:** Ensures all protocol-required data is captured, and the EDC system is set up to reflect the clinical trial schedule and requirements.
